@@ -1,0 +1,129 @@
+networks:
+  hellfire:
+    driver: bridge
+
+services:
+    loadbalancer:
+        container_name: loadbalancer
+        build: 
+          context: ./haproxy
+          dockerfile: Dockerfile
+        image: loadbalancer
+        restart: unless-stopped
+        ports:
+            - '8000:8000'
+        volumes:
+            - ./haproxy:/usr/local/etc/haproxy
+        networks:
+          - hellfire
+        depends_on:
+          - backend1
+          - backend2
+          - backend3
+          - backend4
+
+    backend1:
+        container_name: backend1
+        build: 
+          context: ./backend
+          dockerfile: Dockerfile
+        image: backend
+        environment:
+            - port=8001
+        working_dir: /var/www/backend
+        restart: unless-stopped
+        tty: true
+        volumes:
+          - './backend:/var/www/backend'
+        ports:
+          - 8001
+        depends_on:
+          - redis-service
+        networks:
+          - hellfire
+
+    backend2:
+        container_name: backend2
+        build: 
+          context: ./backend
+          dockerfile: Dockerfile
+        image: backend
+        environment:
+            - port=8002
+        working_dir: /var/www/backend
+        restart: unless-stopped
+        tty: true
+        volumes:
+          - './backend:/var/www/backend'
+        ports:
+          - 8002
+        depends_on:
+          - redis-service
+        networks:
+          - hellfire
+    
+    backend3:
+        container_name: backend3
+        build: 
+          context: ./backend
+          dockerfile: Dockerfile
+        image: backend
+        environment:
+            - port=8003
+        working_dir: /var/www/backend
+        restart: unless-stopped
+        tty: true
+        volumes:
+          - './backend:/var/www/backend'
+        ports:
+          - 8003
+        depends_on:
+          - redis-service
+        networks:
+          - hellfire
+
+    backend4:
+        container_name: backend4
+        build: 
+          context: ./backend
+          dockerfile: Dockerfile
+        image: backend
+        environment:
+            - port=8004
+        working_dir: /var/www/backend
+        restart: unless-stopped
+        tty: true
+        volumes:
+          - './backend:/var/www/backend'
+        ports:
+          - 8004
+        depends_on:
+          - redis-service
+        networks:
+          - hellfire
+
+    frontend:
+      container_name: frontend
+      build: 
+        context: ./frontend
+        dockerfile: Dockerfile
+      image: frontend
+      working_dir: /var/www/frontend
+      restart: unless-stopped
+      tty: true
+      volumes:
+        - './frontend:/var/www/frontend'
+      ports:
+        - '3000:3000'
+      depends_on:
+        - loadbalancer
+      networks:
+        - hellfire
+
+    redis-service:
+        container_name: redis-service
+        image: redis
+        networks:
+          - hellfire
+        ports:
+          - 6379
